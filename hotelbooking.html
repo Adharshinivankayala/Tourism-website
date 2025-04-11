@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Booking - Tourism Website</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: #fff;
+      padding: 20px;
+    }
+    h2, h3 { text-align: center; }
+    form, .hotel, #bookingForm {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; }
+    input, select, button {
+      width: 100%; padding: 8px; border-radius: 5px; border: none;
+    }
+    .hotel img {
+      max-width: 100%; border-radius: 10px;
+    }
+    .hotel-info { margin-top: 10px; }
+    button {
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    #hotels { display: none; }
+    #bookingForm { display: none; }
+  </style>
+</head>
+<body>
+
+  <h2>Search Hotels</h2>
+  <form id="locationForm">
+    <div class="form-group">
+      <label for="location">Enter a Location:</label>
+      <input type="text" id="location" placeholder="e.g., Goa" required />
+    </div>
+    <button type="submit">Search</button>
+  </form>
+
+  <div id="hotels"></div>
+
+  <div id="bookingForm">
+    <h3>Complete Your Booking</h3>
+    <form id="finalForm">
+      <div class="form-group">
+        <label for="persons">Number of Persons:</label>
+        <input type="number" id="persons" min="1" required />
+      </div>
+      <div class="form-group">
+        <label for="roomType">Room Type:</label>
+        <select id="roomType" required>
+          <option value="AC">AC</option>
+          <option value="Non-AC">Non-AC</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="payment">Payment Method:</label>
+        <select id="payment" required>
+          <option value="Netbanking">Netbanking</option>
+          <option value="PhonePe">PhonePe (UPI)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="upi">Enter UPI Number:</label>
+        <input type="text" id="upi" placeholder="e.g. yourname@upi" required />
+      </div>
+      <div class="form-group">
+        <label for="amount">Total Amount:</label>
+        <input type="text" id="amount" readonly />
+      </div>
+      <button type="submit">Proceed to Payment</button>
+    </form>
+  </div>
+
+  <script>
+    const hotelData = {
+      goa: [
+        { name: "Beachside Resort", price: 3500, image: "https://source.unsplash.com/featured/?beach,resort" },
+        { name: "Palm Villa", price: 4200, image: "https://source.unsplash.com/featured/?villa" }
+      ],
+      paris: [
+        { name: "Eiffel View Hotel", price: 7000, image: "https://source.unsplash.com/featured/?eiffel,tower,hotel" },
+        { name: "City Center Inn", price: 5600, image: "https://source.unsplash.com/featured/?paris,hotel" }
+      ],
+      tokyo: [
+        { name: "Shinjuku Grand", price: 6500, image: "https://source.unsplash.com/featured/?tokyo,hotel" },
+        { name: "Tokyo Capsule Stay", price: 2200, image: "https://source.unsplash.com/featured/?capsule,hotel" }
+      ]
+    };
+
+    let selectedHotel = null;
+
+    document.getElementById("locationForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const location = document.getElementById("location").value.trim().toLowerCase();
+      const hotelsDiv = document.getElementById("hotels");
+      hotelsDiv.innerHTML = "";
+      document.getElementById("bookingForm").style.display = "none";
+
+      if (hotelData[location]) {
+        hotelData[location].forEach((hotel) => {
+          const hotelCard = document.createElement("div");
+          hotelCard.className = "hotel";
+          hotelCard.innerHTML = `
+            <img src="${hotel.image}" alt="${hotel.name}" />
+            <div class="hotel-info">
+              <h4>${hotel.name}</h4>
+              <p>Price per night: ₹${hotel.price}</p>
+              <button class="book-now" data-name="${hotel.name}" data-price="${hotel.price}">Book Now</button>
+            </div>
+          `;
+          hotelsDiv.appendChild(hotelCard);
+        });
+        hotelsDiv.style.display = "block";
+
+        document.querySelectorAll(".book-now").forEach(button => {
+          button.addEventListener("click", function () {
+            const name = this.getAttribute("data-name");
+            const price = parseInt(this.getAttribute("data-price"));
+            selectedHotel = { name, price };
+            document.getElementById("bookingForm").style.display = "block";
+            document.getElementById("amount").value = "";
+            document.getElementById("persons").value = "";
+          });
+        });
+      } else {
+        hotelsDiv.innerHTML = `<p>No hotels found for that location.</p>`;
+        hotelsDiv.style.display = "block";
+      }
+    });
+
+    document.getElementById("persons").addEventListener("input", () => {
+      const persons = parseInt(document.getElementById("persons").value);
+      if (!isNaN(persons) && selectedHotel) {
+        document.getElementById("amount").value = "₹" + (selectedHotel.price * persons);
+      }
+    });
+
+    document.getElementById("finalForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      alert("Payment Successful! Room Booked.");
+
+      const receipt = `Thank you for booking with us!\n\nHotel: ${selectedHotel.name}\nRoom Type: ${document.getElementById("roomType").value}\nPersons: ${document.getElementById("persons").value}\nTotal Amount: ${document.getElementById("amount").value}`;
+
+      const blob = new Blob([receipt], { type: 'text/plain' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "booking_receipt.txt";
+      link.click();
+    });
+  </script>
+</body>
+</html>
